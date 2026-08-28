@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { DriverProfileEntity } from "./driver-profile.entity";
 
 @Entity('users')
 export class UserEntity {
@@ -12,7 +13,7 @@ export class UserEntity {
     @Column({ unique: true })
     email: string;
 
-    @Column()
+    @Column({ unique: true})
     phone: string;
 
     @Column()
@@ -23,5 +24,8 @@ export class UserEntity {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @OneToOne(() => DriverProfileEntity, (driverProfile) => driverProfile.user)
+    driverProfile: DriverProfileEntity
 
 }
