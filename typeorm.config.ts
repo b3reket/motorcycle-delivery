@@ -4,7 +4,7 @@ import 'dotenv/config'
 export default new DataSource({
     type: 'postgres',
     url: process.env.DATABASE_URL,
-    entities: ['src/**/*.entity.ts'],
-    migrations: ['src/database/migrations/*.ts'],
+    entities: [__dirname + '/src/**/*.entity.ts'],
+    migrations: [__dirname + '/src/database/migrations/*.ts'],
     ssl: true,
 })
