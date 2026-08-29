@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DriversModule } from './drivers/drivers.module';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       ssl: true
     }),
     
-    AuthModule, UsersModule, DeliveriesModule],
+    AuthModule, UsersModule, DeliveriesModule, DriversModule],
   controllers: [AppController],
   providers: [AppService],
 })

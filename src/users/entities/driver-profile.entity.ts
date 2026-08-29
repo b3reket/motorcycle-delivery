@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, OneToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { UserEntity } from "./user.entity";
 
 export enum DriverVerificationStatus {
@@ -9,12 +9,13 @@ export enum DriverVerificationStatus {
 
 @Entity('driver_profiles')
 export class DriverProfileEntity {
-    @PrimaryColumn('uuid')
+    @PrimaryGeneratedColumn('uuid')
     id: string
 
     @OneToOne(() => UserEntity, (user) => user.driverProfile, {
         onDelete: 'CASCADE'
     })
+    @JoinColumn()
     user: UserEntity
 
     @Column()

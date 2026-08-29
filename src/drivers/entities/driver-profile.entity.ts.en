@@ -1,0 +1,51 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+import { UserEntity } from '../../users/entities/user.entity';
+
+export enum DriverStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+@Entity('driver_profiles')
+export class DriverProfileEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ length: 100 })
+  motorcycleModel: string;
+
+  @Column({ unique: true })
+  plateNumber: string;
+
+  @Column({ unique: true })
+  licenseNumber: string;
+
+  @Column({
+    type: 'enum',
+    enum: DriverStatus,
+    default: DriverStatus.PENDING,
+  })
+  status: DriverStatus;
+
+  @OneToOne(() => UserEntity, (user) => user.driverProfile, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  user: UserEntity;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

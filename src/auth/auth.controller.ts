@@ -6,6 +6,7 @@ import type { Response } from 'express';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from './types/authenticated-request';
 
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -53,5 +54,4 @@ export class AuthController {
     };
   }
 
-  
 }
