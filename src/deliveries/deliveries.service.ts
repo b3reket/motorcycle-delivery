@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeliveryEntity, DeliveryStatus } from './entities/delivery.entity/delivery.entity';
 import { IsNull, Repository } from 'typeorm';
@@ -97,5 +97,82 @@ export class DeliveriesService {
             }
         })
     }
+
+    async acceptDelivery(userId: string, deliverId: string) {
+        const driverProfile = await this.driverRepo.findOne({
+            where: {
+                user: {
+                    id: userId
+                }
+            }
+        })
+
+    if (!driverProfile) {
+        throw new ForbiddenException(
+        'You are not registered as a driver',
+        );
+    }   
     
+    if (
+        driverProfile.verificationStatus !==
+        DriverVerificationStatus.APPROVED
+    ) {
+        throw new ForbiddenException(
+        'Your driver account is not approved',
+        );
+    }
+
+    const delivery = await this.deliveryRepo.findOne({
+        where: {
+            id: deliverId
+        }
+    })
+
+    if (!delivery) {
+        throw new NotFoundException('Delivery not found');
+    }
+
+    if (delivery.status !== DeliveryStatus.PENDING) {
+        throw new ConflictException(
+        'This delivery is no longer available',
+        );
+    }
+
+    if (delivery.driver) {
+        throw new ConflictException(
+        'this delivery has already been accepted',
+        );
+    }
+
+    const driver = await this.userRepo.findOne({
+        where: {
+            id: userId
+        }
+    })
+
+    if (!driver) {
+        throw new NotFoundException('User not found');
+    }
+
+    delivery.driver = driver
+    delivery.status = DeliveryStatus.ACCEPTED
+
+    const savedDelivery = await this.deliveryRepo.save(delivery)
+
+
+    return {
+        id: savedDelivery.id,
+        pickupAddress: savedDelivery.pickupAddress,
+        destinationAddress: savedDelivery.destinationAddress,
+        recipientName: savedDelivery.recipientName,
+        recipientPhone: savedDelivery.recipientPhone,
+        packageDescription: savedDelivery.packageDescription,
+        packageWeight: savedDelivery.packageWeight,
+        packageSize: savedDelivery.packageSize,
+        deliveryFee: savedDelivery.deliveryFee,
+        status: savedDelivery.status,
+        createdAt: savedDelivery.createdAt,
+        updatedAt: savedDelivery.updatedAt,
+    }
+    }
 }
