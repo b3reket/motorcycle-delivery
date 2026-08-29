@@ -1,9 +1,10 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DriverProfileEntity } from 'src/users/entities/driver-profile.entity';
+import { DriverProfileEntity, DriverVerificationStatus } from 'src/users/entities/driver-profile.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateDriverProfileDto } from './dto/create-driver-profile.dto';
+import { DeliveryEntity, DeliveryStatus } from 'src/deliveries/entities/delivery.entity/delivery.entity';
 
 @Injectable()
 export class DriversService {
@@ -12,7 +13,10 @@ export class DriversService {
         private readonly driverRepo: Repository<DriverProfileEntity>,
         
         @InjectRepository(UserEntity)
-        private readonly userRepo: Repository<UserEntity>
+        private readonly userRepo: Repository<UserEntity>,
+
+        @InjectRepository(DeliveryEntity)
+        private readonly deliveryRepo: Repository<DeliveryEntity>
     ) {}
 
     async createDriverProfile(userId: string, dto: CreateDriverProfileDto) {
@@ -78,4 +82,27 @@ export class DriversService {
         };
         
     }
+
+    async getApprovedDriverProfile(userId: string) {
+        const driverProfile = await this.driverRepo.findOne({
+            where: {id: userId}
+        })
+
+         if (!driverProfile) {
+            throw new ForbiddenException(
+            'You are not registered as a driver',
+            );
+        }
+
+        if ( driverProfile.verificationStatus !== DriverVerificationStatus.APPROVED) {
+             throw new ForbiddenException(
+            'Your driver account is not approved',
+            );
+        }
+
+        return driverProfile
+
+
+    }
+
 }

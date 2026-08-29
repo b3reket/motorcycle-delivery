@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeliveryEntity } from './entities/delivery.entity/delivery.entity';
-import { Repository } from 'typeorm';
+import { DeliveryEntity, DeliveryStatus } from './entities/delivery.entity/delivery.entity';
+import { IsNull, Repository } from 'typeorm';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { CreateDeliveryDto } from './dto/create-delivery.dto';
+import { DriverProfileEntity, DriverVerificationStatus } from 'src/users/entities/driver-profile.entity';
 
 @Injectable()
 export class DeliveriesService {
@@ -13,6 +14,9 @@ export class DeliveriesService {
 
         @InjectRepository(UserEntity)
         private readonly userRepo: Repository<UserEntity>, 
+
+        @InjectRepository(DriverProfileEntity)
+        private readonly driverRepo: Repository<DriverProfileEntity>, 
 
     ) {}
 
@@ -59,6 +63,39 @@ export class DeliveriesService {
             createdAt: savedDelivery.createdAt,
             updatedAt: savedDelivery.updatedAt,
         }
+    }
+
+    
+    async getAvailableDeliveries(userId: string) {
+        const driverProfile = await this.driverRepo.findOne({
+            where: {
+                user: {
+                    id: userId
+                },
+            }
+        })
+
+        if (!driverProfile) {
+            throw new ForbiddenException(
+            'You are not registered as a driver',
+            );
+        }
+
+        if ( driverProfile.verificationStatus !== DriverVerificationStatus.APPROVED) {
+            throw new ForbiddenException(
+            'Your driver account is not approved',
+            );
+        }
+
+        return this.deliveryRepo.find({
+            where: {
+                status: DeliveryStatus.PENDING, 
+                driver: IsNull()
+            },
+            order: {
+                createdAt: 'DESC'
+            }
+        })
     }
     
 }
