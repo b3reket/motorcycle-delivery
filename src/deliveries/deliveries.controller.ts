@@ -30,4 +30,31 @@ export class DeliveriesController {
   ) {
     return this.deliveriesService.acceptDelivery(req.user.userId, id)
   }
+
+  @Patch(':id/pickup') 
+  @UseGuards(JwtAuthGuard)  
+  pickUp(
+    @Param('id') id: string,
+    @Req() req: Request & {user: {userId: string} }
+  ) {
+    return this.deliveriesService.markAsPickedUp(id, req.user.userId)
+  }
+
+  @Patch(':id/in-transit') 
+  @UseGuards(JwtAuthGuard)  
+  inTransit(
+    @Param('id') id: string,
+    @Req() req: Request & {user: {userId: string} }
+  ) {
+    return this.deliveriesService.markAsInTransit(id, req.user.userId)
+  }
+
+  @Patch(':id/delivered') 
+  @UseGuards(JwtAuthGuard)  
+  delivered(
+    @Param('id') id: string,
+    @Req() req: Request & {user: {userId: string} }
+  ) {
+    return this.deliveriesService.markAsDelivered(id, req.user.userId)
+  }
 }

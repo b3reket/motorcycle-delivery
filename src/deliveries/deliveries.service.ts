@@ -175,4 +175,159 @@ export class DeliveriesService {
         updatedAt: savedDelivery.updatedAt,
     }
     }
+
+    async markAsPickedUp(deliverId: string, userId: string) {
+        const driverProfile = await this.driverRepo.findOne({
+            where: {
+                user: {id: userId}
+            }
+        })
+
+        if (!driverProfile) {
+            throw new ForbiddenException(
+            'You are not registered as a driver',
+            );
+        }
+        
+        if (driverProfile.verificationStatus !== DriverVerificationStatus.APPROVED) {
+            throw new ForbiddenException(
+            'Your driver account is not approved',
+            );
+        }
+
+        const delivery = await this.deliveryRepo.findOne({
+            where: {id: deliverId},
+            relations: {driver: true}
+        })
+
+        if (!delivery) {
+            throw new NotFoundException('Delivery not found');
+        }
+
+        if (!delivery.driver || delivery.driver.id !== userId) {
+            throw new ForbiddenException(
+            'You are not the driver assigned to this delivery',
+            );
+        }
+
+        if (delivery.status !== DeliveryStatus.ACCEPTED) {
+            throw new ConflictException(
+            'Delivery must be accepted before pickup',
+            );
+        }
+
+        delivery.status = DeliveryStatus.PICKED_UP
+
+        const savedDelivery = await this.deliveryRepo.save(delivery)
+
+        return {
+            id: savedDelivery.id,
+            status: savedDelivery.status,
+            updatedAt: savedDelivery.updatedAt,
+        }
+    }
+
+    async markAsInTransit(deliverId: string, userId: string) {
+        const driverProfile = await this.driverRepo.findOne({
+            where: {
+                user: {id: userId}
+            }
+        })
+
+        if (!driverProfile) {
+            throw new ForbiddenException(
+            'You are not registered as a driver',
+            );
+        }
+        
+        if (driverProfile.verificationStatus !== DriverVerificationStatus.APPROVED) {
+            throw new ForbiddenException(
+            'Your driver account is not approved',
+            );
+        }
+
+        const delivery = await this.deliveryRepo.findOne({
+            where: {id: deliverId},
+            relations: {driver: true}
+        })
+
+        if (!delivery) {
+            throw new NotFoundException('Delivery not found');
+        }
+
+        if (!delivery.driver || delivery.driver.id !== userId) {
+            throw new ForbiddenException(
+            'You are not the driver assigned to this delivery',
+            );
+        }
+
+        if (delivery.status !== DeliveryStatus.PICKED_UP) {
+            throw new ConflictException(
+            'Delivery must be picked up before it can be in transit',
+            );
+        }
+
+        delivery.status = DeliveryStatus.IN_TRANSIT
+
+        const savedDelivery = await this.deliveryRepo.save(delivery)
+
+        return {
+            id: savedDelivery.id,
+            status: savedDelivery.status,
+            updatedAt: savedDelivery.updatedAt,
+        }
+
+    }
+
+    async markAsDelivered(deliverId: string, userId: string) {
+        const driverProfile = await this.driverRepo.findOne({
+            where: {
+            user: {id: userId}
+        }
+        })
+
+        if (!driverProfile) {
+            throw new ForbiddenException(
+            'You are not registered as a driver',
+            );
+        }
+        
+        if (driverProfile.verificationStatus !== DriverVerificationStatus.APPROVED) {
+            throw new ForbiddenException(
+            'Your driver account is not approved',
+            );
+        }
+
+        const delivery = await this.deliveryRepo.findOne({
+            where: {id: deliverId},
+            relations: {driver: true}
+        })
+
+        if (!delivery) {
+            throw new NotFoundException('Delivery not found');
+        }
+
+        if (!delivery.driver || delivery.driver.id !== userId) {
+            throw new ForbiddenException(
+            'You are not the driver assigned to this delivery',
+            );
+        }   
+
+        if (delivery.status !== DeliveryStatus.IN_TRANSIT) {
+            throw new ConflictException(
+            'Delivery must be picked up before it can be in transit',
+            );
+        }
+
+        delivery.status = DeliveryStatus.DELIVERED
+
+        const savedDelivery = await this.deliveryRepo.save(delivery)
+        
+        return {
+            id: savedDelivery.id,
+            status: savedDelivery.status,
+            updatedAt: savedDelivery.updatedAt,
+        }
+    }
+
 }
