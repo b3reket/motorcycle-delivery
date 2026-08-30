@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nest
 import { DeliveriesService } from './deliveries.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateDeliveryDto } from './dto/create-delivery.dto';
+import { UpdateDeliveryDto } from 'src/drivers/dto/update-delivery.dto';
 
 @Controller('deliveries')
 export class DeliveriesController {
@@ -57,4 +58,30 @@ export class DeliveriesController {
   ) {
     return this.deliveriesService.markAsDelivered(id, req.user.userId)
   }
+
+  @Get('my-deliveries')
+  @UseGuards(JwtAuthGuard)
+  getMyDeliveries(@Req() req: Request & {user: {userId: string}}) {
+    return this.deliveriesService.getMyDeliveries(req.user.userId)
+  }
+
+  @Patch(':id/cancel')
+  @UseGuards(JwtAuthGuard)
+  cancelDelivery(
+    @Param('id') id: string,
+    @Req() req: Request & {user: {userId: string}} 
+  ) {
+    return this.deliveriesService.cancelDelivery(id, req.user.userId)
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  updateDelivery(
+    @Param('id') id: string,
+    @Req() req: Request & {user: {userId: string}},
+    dto: UpdateDeliveryDto
+  ) {
+    return this.deliveriesService.updateDelivery(id, req.user.userId, dto)
+  }
+
 }

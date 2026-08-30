@@ -5,6 +5,7 @@ import { IsNull, Repository } from 'typeorm';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { CreateDeliveryDto } from './dto/create-delivery.dto';
 import { DriverProfileEntity, DriverVerificationStatus } from 'src/users/entities/driver-profile.entity';
+import { UpdateDeliveryDto } from 'src/drivers/dto/update-delivery.dto';
 
 @Injectable()
 export class DeliveriesService {
@@ -322,10 +323,140 @@ export class DeliveriesService {
         delivery.status = DeliveryStatus.DELIVERED
 
         const savedDelivery = await this.deliveryRepo.save(delivery)
-        
+
         return {
             id: savedDelivery.id,
             status: savedDelivery.status,
+            updatedAt: savedDelivery.updatedAt,
+        }
+    }
+
+    async getMyDeliveries(userId: string) {
+        const deliveries = await this.deliveryRepo.find({
+            where: {
+                customer: {
+                    id: userId
+                }
+            },
+            relations: {
+                driver: true
+            },
+            order: {
+                createdAt: 'DESC'
+            }
+        }
+
+
+    )
+
+    return deliveries.map((delivery) => ({
+        id: delivery.id,
+        pickupAddress: delivery.pickupAddress,
+        destinationAddress: delivery.destinationAddress,
+        recipientName: delivery.recipientName,
+        recipientPhone: delivery.recipientPhone,
+        packageDescription: delivery.packageDescription,
+        packageWeight: delivery.packageWeight,
+        packageSize: delivery.packageSize,
+        deliveryFee: delivery.deliveryFee,
+        status: delivery.status,
+        driver: delivery.driver
+        ? {
+            id: delivery.driver.id,
+            name: delivery.driver.name,
+            phone: delivery.driver.phone,
+            }
+        : null,
+        createdAt: delivery.createdAt,
+        updatedAt: delivery.updatedAt,
+    }));
+
+    }
+
+    async cancelDelivery(deliveryId: string, userId: string) {
+        const delivery = await this.deliveryRepo.findOne({
+            where: {
+                id: deliveryId
+            },
+            relations: {
+                customer: true
+            }
+        })
+
+         if (!delivery) {
+            throw new NotFoundException('Delivery not found');
+        }
+
+        if (delivery.customer.id !== userId) {
+            throw new ForbiddenException(
+            'You are not the customer who created this delivery',
+            );
+        }
+
+         if (delivery.status !== DeliveryStatus.PENDING) {
+            throw new ConflictException(
+            'Only pending deliveries can be cancelled',
+            );
+        }
+
+        delivery.status = DeliveryStatus.CANCELLED
+
+        const savedDelivery = await this.deliveryRepo.save(delivery)
+
+        return {
+            id: savedDelivery.id,
+            status: savedDelivery.status,
+            updatedAt: savedDelivery.updatedAt,
+        }
+
+    }
+
+    async updateDelivery(
+        deliveryId: string,
+        userId: string,
+        dto: UpdateDeliveryDto,
+    ) {
+        const delivery = await this.deliveryRepo.findOne({
+            where: {
+                id: deliveryId
+            },
+            relations: {
+                customer: true
+            }
+        })
+
+        if (!delivery) {
+            throw new NotFoundException('Delivery not found');
+        }
+
+        if (delivery.customer.id !== userId) {
+            throw new ForbiddenException(
+            'You are not the customer who created this delivery',
+            );
+        }
+
+        if (delivery.status !== DeliveryStatus.PENDING) {
+            throw new ConflictException(
+            'Only pending deliveries can be edited',
+            );
+        }
+
+        Object.assign(delivery, dto)
+
+        const savedDelivery = await this.deliveryRepo.save(delivery)
+
+        return {
+            id: savedDelivery.id,
+            pickupAddress: savedDelivery.pickupAddress,
+            destinationAddress: savedDelivery.destinationAddress,
+            recipientName: savedDelivery.recipientName,
+            recipientPhone: savedDelivery.recipientPhone,
+            packageDescription: savedDelivery.packageDescription,
+            packageWeight: savedDelivery.packageWeight,
+            packageSize: savedDelivery.packageSize,
+            deliveryFee: savedDelivery.deliveryFee,
+            status: savedDelivery.status,
+            createdAt: savedDelivery.createdAt,
             updatedAt: savedDelivery.updatedAt,
         }
     }
