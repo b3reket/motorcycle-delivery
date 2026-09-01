@@ -29,8 +29,12 @@ export class DriversService {
         }
 
         const existingProfile = await this.driverRepo.findOne({
-            where: {id: userId}
-        })
+        where: {
+            user: {
+            id: userId,
+            },
+        },
+        });
 
         if (existingProfile) {
             throw new ConflictException(
@@ -85,7 +89,11 @@ export class DriversService {
 
     async getApprovedDriverProfile(userId: string) {
         const driverProfile = await this.driverRepo.findOne({
-            where: {id: userId}
+            where: {
+            user: {
+                id: userId,
+            },
+            }
         })
 
          if (!driverProfile) {

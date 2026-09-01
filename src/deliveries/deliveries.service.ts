@@ -441,6 +441,8 @@ export class DeliveriesService {
             );
         }
 
+        console.log('UPDATE DTO:', dto);
+
         Object.assign(delivery, dto)
 
         const savedDelivery = await this.deliveryRepo.save(delivery)
@@ -459,6 +461,48 @@ export class DeliveriesService {
             createdAt: savedDelivery.createdAt,
             updatedAt: savedDelivery.updatedAt,
         }
+    }
+
+    async getMyDriverDeliveries(userId: string) {
+        const deliveries = await this.deliveryRepo.find({
+            where: {
+                driver: {
+                    id: userId,
+                },
+            },
+            relations: {
+                customer: true,
+            },
+            order: {
+                createdAt: 'DESC',
+            },
+        });
+
+         return deliveries.map((delivery) => ({
+            id: delivery.id,
+            pickupAddress: delivery.pickupAddress,
+            destinationAddress: delivery.destinationAddress,
+            recipientName: delivery.recipientName,
+            recipientPhone: delivery.recipientPhone,
+            packageDescription: delivery.packageDescription,
+            packageWeight: delivery.packageWeight,
+            packageSize: delivery.packageSize,
+            deliveryFee: delivery.deliveryFee,
+            status: delivery.status,
+
+            customer: delivery.customer
+                ? {
+                    id: delivery.customer.id,
+                    name: delivery.customer.name,
+                    phone: delivery.customer.phone,
+                }
+                : null,
+
+            createdAt: delivery.createdAt,
+            updatedAt: delivery.updatedAt,
+        }));
+
+
     }
 
 }

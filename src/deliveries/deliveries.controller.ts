@@ -65,6 +65,12 @@ export class DeliveriesController {
     return this.deliveriesService.getMyDeliveries(req.user.userId)
   }
 
+  @Get('my-driver-deliveries')
+  @UseGuards(JwtAuthGuard)
+  getMyDriverDeliveries(@Req() req: Request & {user: {userId: string}}) {
+    return this.deliveriesService.getMyDriverDeliveries(req.user.userId)
+  }
+
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard)
   cancelDelivery(
@@ -79,7 +85,7 @@ export class DeliveriesController {
   updateDelivery(
     @Param('id') id: string,
     @Req() req: Request & {user: {userId: string}},
-    dto: UpdateDeliveryDto
+    @Body() dto: UpdateDeliveryDto
   ) {
     return this.deliveriesService.updateDelivery(id, req.user.userId, dto)
   }
