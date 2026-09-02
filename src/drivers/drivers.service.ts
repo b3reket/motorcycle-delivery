@@ -49,7 +49,33 @@ export class DriversService {
             driversLicenseNumber: dto.driversLicenseNumber,
         });
 
-        const savedDriverProfile = await this.driverRepo.save(driverProfile);
+        let savedDriverProfile: DriverProfileEntity;
+
+        try {
+        savedDriverProfile = await this.driverRepo.save(driverProfile);
+        } catch (error: any) {
+        if (error?.code === '23505') {
+            const detail = error?.detail ?? '';
+
+            if (detail.includes('motorcyclePlateNumber')) {
+            throw new ConflictException(
+                'This motorcycle plate number is already registered.',
+            );
+            }
+
+            if (detail.includes('driversLicenseNumber')) {
+            throw new ConflictException(
+                "This driver's license number is already registered.",
+            );
+            }
+
+            throw new ConflictException(
+            'A driver profile with these details already exists.',
+            );
+        }
+
+        throw error;
+        }
 
         return {
              id: savedDriverProfile.id,
